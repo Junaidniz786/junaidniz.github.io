@@ -1,0 +1,13 @@
+function toggleMenu() {
+    var menu = document.getElementById("sidebar-menu");
+    var content = document.querySelector(".content");
+
+    if (menu.style.width === "250px") {
+        menu.style.width = "0"; // مینیو بند کریں
+        content.style.marginLeft = "0"; // کنٹینٹ کو واپس لائیں
+    } else {
+        menu.style.width = "250px"; // مینیو کھولیں
+        content.style.marginLeft = "250px"; // کنٹینٹ کو کھسکائیں
+    }
+}
+
