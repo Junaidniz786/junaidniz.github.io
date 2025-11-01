@@ -1,2 +1,2 @@
-# junaidniz.github.io
+junaidniz.github.io
 junaidniz.pw
