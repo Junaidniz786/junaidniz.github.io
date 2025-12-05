@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title> Junaid Niz </title>
+
+  <!-- ✅ SEO Meta -->
+  <meta name="description" content="Junaid Niz . Multi-country virtual numbers and OTP SMS panel with live OTP feed and WhatsApp/Telegram alerts.">
+  <meta name="keywords" content="Junaid Niz, OTP Hub, SMS OTP, virtual numbers, junaidniz.pw">
+  <meta name="author" content="Junaid Niz">
+  <meta property="og:title" content="VIP OTP Hub – Junaid Niz">
+  <meta property="og:description" content="VIP OTP Hub by Junaid Niz – live OTP SMS panel with multi-country numbers.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://junaidniz.pw/">
+
+  <!-- Tailwind & Feather Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #0b0b0d;
+      color: #e5e7eb;
+      padding: 1rem;
+    }
+
+    .vip-title {
+      background: linear-gradient(90deg, #FFD700, #FFAA00, #8E2DE2, #4A00E0);
+      background-size: 300% 100%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shine 6s linear infinite;
+      font-weight: 900;
+    }
+
+    @keyframes shine {
+      0% { background-position: 0%; }
+      100% { background-position: 300%; }
+    }
+
+    .scroll-area {
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+
+<body>
+<div class="max-w-6xl mx-auto space-y-6">
+
+  <!-- HEADER -->
+  <header class="flex flex-col sm:flex-row justify-between items-center py-4 border-b border-gray-700 gap-4">
+    <h1 class="text-3xl vip-title">💎 Junaid Niz 💎</h1>
+
+    <div class="flex flex-wrap gap-2">
+      <a href="https://t.me/+8uILVxT_n6lhYzFk" target="_blank"
+         class="px-4 py-2 bg-blue-600 rounded-lg font-semibold text-sm">
+         📢 Main Channel
+      </a>
+
+      <a href="https://t.me/+c4VCxBCT3-QzZGFk" target="_blank"
+         class="px-4 py-2 bg-green-600 rounded-lg font-semibold text-sm">
+         📞 Numbers Channel
+      </a>
+    </div>
+  </header>
+
+  <!-- COUNTRY DROPDOWN + CHANGE BUTTON -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+    <div>
+      <label class="text-sm font-semibold">Select Country:</label>
+      <select id="countryDropdown"
+        class="bg-[#18181b] border border-gray-700 text-gray-200 text-sm rounded-lg p-2 mt-1">
+        <option value="all">🌍 All Countries</option>
+      </select>
+    </div>
+
+    <button id="changeNumberBtn"
+            class="px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-xs sm:text-sm hover:border-yellow-400">
+      🔁 Change Random Number
+    </button>
+  </div>
+
+  <!-- SELECTED NUMBER -->
+  <div class="bg-[#18181b] p-6 rounded-xl border-t-4 border-yellow-400 shadow-xl space-y-2">
+    <h2 class="text-xl font-semibold flex items-center">
+      <i data-feather="smartphone" class="w-6 h-6 mr-2 text-yellow-400"></i>
+      Selected Number (From Numbers APIs)
+    </h2>
+
+    <div id="randomNumberDisplay" class="text-center mt-2">
+      <p class="text-yellow-400 text-4xl font-mono font-bold">Loading…</p>
+    </div>
+    <p id="numberError" class="text-red-400 text-center text-sm hidden"></p>
+  </div>
+
+  <!-- ALL NUMBERS LIST -->
+  <div class="bg-[#18181b] p-4 rounded-xl shadow border border-gray-700">
+    <div class="flex justify-between items-center mb-2">
+      <h3 class="text-lg font-semibold flex items-center">
+        <i data-feather="list" class="w-5 h-5 mr-2 text-yellow-400"></i>
+        All Numbers (Filtered by Country)
+      </h3>
+      <small id="numbersCount" class="text-gray-400 text-xs"></small>
+    </div>
+
+    <div id="numbersList" class="scroll-area text-sm space-y-1">
+      <p class="text-gray-500 text-center text-sm">Loading numbers from APIs…</p>
+    </div>
+  </div>
+
+  <!-- SMS TABLE -->
+  <section>
+    <div class="flex justify-between items-center mb-2">
+      <h2 class="text-2xl font-bold">Incoming OTP Messages</h2>
+      <button id="refreshSmsBtn"
+              class="px-3 py-1.5 text-xs bg-yellow-400 text-black font-semibold rounded-lg flex items-center gap-1">
+        <i id="refreshSmsIcon" data-feather="refresh-cw" class="w-4 h-4"></i>
+        Refresh SMS
+      </button>
+    </div>
+
+    <!-- 🔍 SMS SEARCH BOX -->
+    <div class="mt-1 mb-3">
+      <input id="smsSearchBox"
+             type="text"
+             placeholder="Search OTP / Number / Service / Country / Message…"
+             class="w-full bg-[#18181b] border border-gray-700 text-gray-200 text-sm rounded-lg p-2">
+    </div>
+
+    <div id="smsStatus" class="text-yellow-400 py-2 text-center text-sm">Loading SMS…</div>
+
+    <div class="bg-[#18181b] rounded-xl shadow-xl scroll-area">
+      <table class="min-w-full text-xs sm:text-sm">
+        <thead class="bg-[#242427] sticky top-0 z-10">
+          <tr>
+            <th class="px-3 py-3 text-left w-4/5">Details</th>
+            <th class="px-3 py-3 text-center w-1/5">Analyze</th>
+          </tr>
+        </thead>
+        <tbody id="otpTableBody"></tbody>
+      </table>
+    </div>
+    <p id="smsError" class="text-red-400 text-center text-sm pt-2 hidden"></p>
+  </section>
+
+</div>
+
+<script>
+  feather.replace();
+
+  // -------- FLAG MAP (known countries) --------
+  const FLAG_MAP = {
+    "Pakistan": "🇵🇰",
+    "PAKISTAN": "🇵🇰",
+    "India": "🇮🇳",
+    "INDIA": "🇮🇳",
+    "Bangladesh": "🇧🇩",
+    "Afghanistan": "🇦🇫",
+    "Nepal": "🇳🇵",
+    "Nigeria": "🇳🇬",
+    "Ethiopia": "🇪🇹",
+    "Kyrgyzstan": "🇰🇬",
+    "Kazakhstan": "🇰🇿",
+    "Tajikistan": "🇹🇯",
+    "Ukraine": "🇺🇦",
+    "Congo": "🇨🇬",
+    "Venezuela": "🇻🇪",
+    "Burkina Faso": "🇧🇫",
+    "BURKINA FASO": "🇧🇫",
+    "Comoros": "🇰🇲",
+    "COMOROS": "🇰🇲",
+    "Morocco": "🇲🇦",
+    "MOROCCO": "🇲🇦",
+  };
+
+  function getFlag(countryName) {
+    if (!countryName) return "🌍";
+    const name = String(countryName).trim();
+    return FLAG_MAP[name] || FLAG_MAP[name.toUpperCase()] || "🌍";
+  }
+
+  // ---------- CLEAN COUNTRY NAME ----------
+  function cleanCountry(raw) {
+    if (!raw) return "Unknown";
+    let c = String(raw).trim();
+
+    // "-" se pehle ka part
+    c = c.split("-")[0].trim();
+
+    // pehli digit se pehle tak
+    const digitIndex = c.search(/[0-9]/);
+    if (digitIndex !== -1) {
+      c = c.slice(0, digitIndex).trim();
+    }
+
+    c = c.replace(/\s+/g, " ");
+
+    return c || "Unknown";
+  }
+
+  function extractCountry(groupText) {
+    return cleanCountry(groupText);
+  }
+
+  function maskNumber(n) {
+    if (!n) return "N/A";
+    const s = String(n);
+    if (s.length <= 7) return s;
+    return s.slice(0, 4) + "****" + s.slice(-3);
+  }
+
+  // ---------------- API LISTS ----------------
+  const CORS = "https://corsproxy.io/?";
+
+  const NUM_APIS = [
+    "https://www.kamibroken.pw/api/sms?type=numbers",
+    "https://www.junaidniz.pw/api/tempotp?type=numbers",
+    "https://www.junaidniz.pw/api/tempotps?type=numbers",
+  ].map(u => CORS + encodeURIComponent(u));
+
+  const SMS_APIS = [
+    "https://www.kamibroken.pw/api/sms?type=sms",
+    "https://www.junaidniz.pw/api/tempotps?type=sms",
+    "https://www.junaidniz.pw/api/tempotp?type=sms",
+  ].map(u => CORS + encodeURIComponent(u));
+
+  // ---------------- DOM ELEMENTS ----------------
+  const countryDropdown     = document.getElementById("countryDropdown");
+  const randomNumberDisplay = document.getElementById("randomNumberDisplay");
+  const numbersListDiv      = document.getElementById("numbersList");
+  const numbersCountSpan    = document.getElementById("numbersCount");
+  const numberError         = document.getElementById("numberError");
+
+  const smsStatus    = document.getElementById("smsStatus");
+  const smsError     = document.getElementById("smsError");
+  const otpTableBody = document.getElementById("otpTableBody");
+  const refreshSmsBtn  = document.getElementById("refreshSmsBtn");
+  const refreshSmsIcon = document.getElementById("refreshSmsIcon");
+  const changeNumberBtn = document.getElementById("changeNumberBtn");
+  const smsSearchBox   = document.getElementById("smsSearchBox");
+
+  let allNumbersData   = [];
+  let filteredNumbers  = [];
+  let allSmsData       = [];
+
+  // ---------------- FETCH NUMBERS FROM NUM_APIS ----------------
+  async function fetchNumbersFromApis() {
+    randomNumberDisplay.innerHTML = '<p class="text-yellow-400 text-2xl font-mono">Loading numbers…</p>';
+    numbersListDiv.innerHTML = '<p class="text-gray-500 text-center text-sm">Loading from numbers APIs…</p>';
+    numberError.classList.add("hidden");
+
+    try {
+      const results = [];
+
+      for (const url of NUM_APIS) {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) {
+            console.warn("NUM API HTTP", res.status, url);
+            continue;
+          }
+          const json = await res.json();
+          if (json && Array.isArray(json.aaData)) {
+            results.push(...json.aaData);
+          }
+        } catch (err) {
+          console.warn("NUM API error", url, err);
+        }
+      }
+
+      if (!results.length) {
+        throw new Error("No numbers from any API.");
+      }
+
+      const seen = new Set();
+      const unique = [];
+      for (const row of results) {
+        if (!Array.isArray(row) || row.length < 3) continue;
+        const key = String(row[0]) + "|" + String(row[2]);
+        if (!seen.has(key)) {
+          seen.add(key);
+          unique.push(row);
+        }
+      }
+
+      allNumbersData = unique.filter(r =>
+        Array.isArray(r) &&
+        r.length > 2 &&
+        r[2] &&
+        String(r[2]).trim().length > 0
+      );
+
+      if (!allNumbersData.length) {
+        throw new Error("Numbers list empty after filtering.");
+      }
+
+      populateCountryDropdown();
+      applyCountryFilter();
+
+    } catch (e) {
+      console.error("fetchNumbersFromApis error:", e);
+      numberError.textContent = e.message || "Failed to load numbers.";
+      numberError.classList.remove("hidden");
+      randomNumberDisplay.innerHTML = '<p class="text-red-400 text-xl font-mono">Error loading numbers</p>';
+      numbersListDiv.innerHTML = '<p class="text-gray-500 text-center text-sm">No numbers loaded.</p>';
+    }
+  }
+
+  // ---------------- POPULATE COUNTRY DROPDOWN ----------------
+  function populateCountryDropdown() {
+    const countries = [...new Set(allNumbersData.map(r => extractCountry(r[0])))]
+      .filter(Boolean)
+      .sort();
+
+    let html = `<option value="all">🌍 All Countries</option>`;
+    countries.forEach(country => {
+      const flag = getFlag(country);
+      html += `<option value="${country}">${flag} ${country}</option>`;
+    });
+
+    countryDropdown.innerHTML = html;
+  }
+
+  // ---------------- APPLY COUNTRY FILTER ----------------
+  function applyCountryFilter() {
+    const selectedCountry = countryDropdown.value;
+
+    if (selectedCountry === "all") {
+      filteredNumbers = [...allNumbersData];
+    } else {
+      filteredNumbers = allNumbersData.filter(r => extractCountry(r[0]) === selectedCountry);
+    }
+
+    renderNumbersList();
+    displayRandomNumber();
+  }
+
+  // ---------------- RENDER ALL NUMBERS LIST ----------------
+  function renderNumbersList() {
+    if (!filteredNumbers.length) {
+      numbersListDiv.innerHTML = "<p class='text-gray-400 text-sm text-center'>No numbers for this country.</p>";
+      numbersCountSpan.textContent = "";
+      return;
+    }
+
+    numbersCountSpan.textContent = `Showing ${filteredNumbers.length} numbers`;
+
+    let html = "";
+    filteredNumbers.forEach(row => {
+      const group   = row[0];
+      const number  = row[2];
+      const country = extractCountry(group);
+      const flag    = getFlag(country);
+
+      html += `
+        <div class="px-3 py-1 bg-[#0f0f11] rounded flex justify-between items-center mb-1">
+          <span class="text-yellow-400 text-xs">
+            ${flag} New ${country}
+          </span>
+          <span class="font-mono text-sm">${number}</span>
+        </div>
+      `;
+    });
+
+    numbersListDiv.innerHTML = html;
+  }
+
+  // ---------------- DISPLAY RANDOM NUMBER ----------------
+  function displayRandomNumber() {
+    if (!filteredNumbers.length) {
+      randomNumberDisplay.innerHTML = `<p class="text-red-400 text-sm">No numbers found for selected filter.</p>`;
+      return;
+    }
+
+    const idx = Math.floor(Math.random() * filteredNumbers.length);
+    const row = filteredNumbers[idx];
+
+    const group   = row[0];
+    const number  = row[2];
+    const country = extractCountry(group);
+    const flag    = getFlag(country);
+
+    randomNumberDisplay.innerHTML = `
+      <span class="text-lg text-gray-300 block mb-1">
+        ${flag} New ${country}
+      </span>
+      <span class="text-yellow-400 text-4xl sm:text-5xl font-mono font-bold">
+        ${number}
+      </span>
+    `;
+  }
+
+  // ---------------- FETCH SMS FROM SMS_APIS (ROBUST) ----------------
+  async function fetchSMS() {
+    smsStatus.textContent = "Loading SMS…";
+    smsError.classList.add("hidden");
+    otpTableBody.innerHTML = "";
+    refreshSmsBtn.disabled = true;
+    refreshSmsIcon.classList.add("animate-spin");
+
+    try {
+      const results = [];
+
+      for (const url of SMS_APIS) {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) {
+            console.warn("SMS API HTTP", res.status, url);
+            continue;
+          }
+
+          const text = await res.text();
+          let json;
+          try {
+            json = JSON.parse(text);
+          } catch (e) {
+            console.warn("Not valid JSON from", url, text.slice(0, 200));
+            continue;
+          }
+
+          let rows = [];
+
+          if (json && Array.isArray(json.aaData)) {
+            rows = json.aaData;
+          } else if (json && Array.isArray(json.data)) {
+            rows = json.data;
+          } else if (Array.isArray(json)) {
+            rows = json;
+          }
+
+          if (rows.length) {
+            results.push(...rows);
+          } else {
+            console.warn("SMS API had no usable rows:", url);
+          }
+
+        } catch (err) {
+          console.warn("SMS API error", url, err);
+        }
+      }
+
+      if (!results.length) {
+        smsStatus.textContent = "No SMS from any API (including tempotp).";
+        return;
+      }
+
+      const seen = new Set();
+      const unique = [];
+      for (const row of results) {
+        if (!Array.isArray(row) || row.length < 5) continue;
+        const key = String(row[0]) + "|" + String(row[2]) + "|" + String(row[4]);
+        if (!seen.has(key)) {
+          seen.add(key);
+          unique.push(row);
+        }
+      }
+
+      allSmsData = unique;
+      renderSmsTable();
+
+    } catch (e) {
+      console.error("fetchSMS error:", e);
+      smsStatus.textContent = "";
+      smsError.textContent = e.message || "Failed to load SMS.";
+      smsError.classList.remove("hidden");
+    } finally {
+      refreshSmsBtn.disabled = false;
+      refreshSmsIcon.classList.remove("animate-spin");
+    }
+  }
+
+  // ---------------- RENDER SMS TABLE ----------------
+  function renderSmsTable(customList = null) {
+    const data = customList || allSmsData;
+
+    if (!data.length) {
+      smsStatus.textContent = "No recent OTP messages found.";
+      otpTableBody.innerHTML = "";
+      return;
+    }
+
+    let html = "";
+    data.forEach(row => {
+      const time    = row[0];
+      const group   = row[1];
+      const number  = row[2];
+      const service = row[3];
+      const msg     = row[4] || "";
+
+      const country = extractCountry(group);
+      const flag    = getFlag(country);
+      const masked  = maskNumber(number);
+      const otpMatch = msg.match(/\b\d{4,8}\b/);
+      const otp     = otpMatch ? otpMatch[0] : "N/A";
+
+      html += `
+        <tr class="border-b border-gray-800 align-top">
+          <td class="px-3 py-3">
+            <b>${flag} New ${country} ${service} OTP!</b>
+            <div class="mt-1 text-gray-300 space-y-0.5">
+              <blockquote>🕰 Time: ${time}</blockquote>
+              <blockquote>${flag} Country: ${country}</blockquote>
+              <blockquote>📞 Number: ${masked}</blockquote>
+              <blockquote>🔑 OTP: <code>${otp}</code></blockquote>
+            </div>
+            <p class="mt-2 text-gray-400 text-xs sm:text-sm">
+              ${msg.replace(/\n/g, "<br>")}
+            </p>
+          </td>
+          <td class="px-3 py-3 text-center align-top">
+            <button class="px-2 py-1 bg-gray-800 rounded text-xs">AI</button>
+          </td>
+        </tr>
+      `;
+    });
+
+    otpTableBody.innerHTML = html;
+    smsStatus.textContent = `Loaded ${data.length} SMS messages.`;
+  }
+
+  // ---------------- SMS SEARCH FILTER ----------------
+  function applySmsSearchFilter() {
+    const q = smsSearchBox.value.toLowerCase().trim();
+    if (!q) {
+      renderSmsTable(); // show all
+      return;
+    }
+
+    const filtered = allSmsData.filter(row => {
+      const time    = String(row[0]).toLowerCase();
+      const group   = String(row[1]).toLowerCase();
+      const number  = String(row[2]).toLowerCase();
+      const service = String(row[3]).toLowerCase();
+      const message = String(row[4]).toLowerCase();
+      return (
+        time.includes(q) ||
+        group.includes(q) ||
+        number.includes(q) ||
+        service.includes(q) ||
+        message.includes(q)
+      );
+    });
+
+    renderSmsTable(filtered);
+  }
+
+  // ---------------- INIT ----------------
+  document.addEventListener("DOMContentLoaded", () => {
+    fetchNumbersFromApis();
+    fetchSMS();
+
+    countryDropdown.addEventListener("change", applyCountryFilter);
+    changeNumberBtn.addEventListener("click", displayRandomNumber);
+    refreshSmsBtn.addEventListener("click", fetchSMS);
+    smsSearchBox.addEventListener("input", applySmsSearchFilter);
+  });
+</script>
+
+</body>
+</html>
