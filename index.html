@@ -3,361 +3,466 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Virtual Number – Junaid Niz</title>
+
+  <title>Junaid Niz – Free OTP Hub</title>
 
   <!-- Google Search Console -->
   <meta name="google-site-verification" content="RgLzzD5mPp_MOfX4RmzwXHX4-kjK5uf7oO3efnUJQzU" />
 
-  <!-- Tailwind, Feather, Fonts -->
+  <!-- Monetag Ads -->
+  <meta name="monetag" content="9431abaead107503c481c105851686df">
+
+  <!-- Tailwind / Icons / Fonts -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-  <!-- google-libphonenumber (auto country + flag from phone) -->
+  <!-- libphonenumber (future use) -->
   <script src="https://cdn.jsdelivr.net/npm/google-libphonenumber@3.2.31/dist/libphonenumber.js"></script>
 
   <style>
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: #0b0b0d;
-      color: #e5e7eb;
-      padding: 1rem;
+    body{
+      font-family:'Poppins',sans-serif;
+      /* Premium gradient + blobs background */
+      background:
+        radial-gradient(circle at 0% 0%, rgba(59,130,246,0.35), transparent 55%),
+        radial-gradient(circle at 100% 15%, rgba(129,140,248,0.35), transparent 55%),
+        radial-gradient(circle at 100% 100%, rgba(45,212,191,0.25), transparent 55%),
+        linear-gradient(to bottom, #0f172a 0, #020617 190px, #f3f4f6 190px);
+      background-attachment: fixed;
+      color:#111827;
     }
-
-    .vip-title {
-      background: linear-gradient(90deg, #FFD700, #FFAA00, #8E2DE2, #4A00E0);
-      background-size: 300% 100%;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      animation: shine 6s linear infinite;
-      font-weight: 900;
+    /* floating glass nav */
+    .nav-glass{
+      box-shadow:0 18px 45px rgba(15,23,42,.35);
+      border-radius:999px;
+      background:#ffffff;
+      backdrop-filter:blur(16px);
     }
-
-    @keyframes shine {
-      0% { background-position: 0%; }
-      100% { background-position: 300%; }
+    .card{
+      background:#ffffff;
+      border-radius:1.25rem;
+      box-shadow:0 20px 40px rgba(15,23,42,.06);
     }
-
-    .sms-scroll {
-      max-height: none;
-      overflow-y: visible;
+    .scroll-area{
+      max-height:70vh;
+      overflow-y:auto;
+    }
+    .pill{
+      border-radius:999px;
+    }
+    .otp-badge{
+      background:#ede9fe;
+      color:#4c1d95;
+      font-weight:700;
+      padding:.15rem .5rem;
+      border-radius:.75rem;
+      font-size:.75rem;
+    }
+    /* white glass shell for main content */
+    .content-shell{
+      background:rgba(255,255,255,0.96);
+      backdrop-filter:blur(10px);
+      box-shadow:0 26px 60px rgba(15,23,42,0.25);
+      border-radius:1.5rem;
+    }
+    /* SPECIAL NAME STYLE */
+    .brand-name{
+      background:linear-gradient(120deg,#4f46e5,#ec4899,#f97316);
+      background-clip:text;
+      -webkit-background-clip:text;
+      color:transparent;
+    }
+    .brand-tag{
+      font-size:11px;
+      letter-spacing:0.08em;
     }
   </style>
 </head>
 
-<body>
-<div class="max-w-6xl mx-auto space-y-6">
+<body class="min-h-screen">
 
-  <!-- HEADER -->
-  <header class="flex flex-col sm:flex-row justify-between items-center py-4 border-b border-gray-700 gap-4">
-    <div>
-      <h1 class="text-3xl vip-title">💎 Junaid Niz 💎</h1>
-      <p class="text-sm text-gray-400 mt-1">
-         Welcome To Junaid Niz 💎.
+<!-- TOP NAV (glass, center like premium sites) -->
+<header class="sticky top-4 z-30 flex justify-center px-4">
+  <div class="nav-glass w-full max-w-5xl flex items-center justify-between px-4 py-2 sm:px-6">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center font-bold text-lg text-gray-900">
+        J
+      </div>
+      <div>
+        <div class="brand-name font-extrabold text-lg leading-tight">Junaid Niz</div>
+        <div class="brand-tag text-gray-500 -mt-0.5 uppercase tracking-wide">💎💍</div>
+      </div>
+    </div>
+
+    <!-- HAMBURGER BTN -->
+    <button id="mobileMenuBtn"
+            class="p-2 rounded-2xl border border-gray-200 bg-white/80 shadow-sm">
+      <i data-feather="menu" class="w-5 h-5 text-gray-700"></i>
+    </button>
+  </div>
+</header>
+
+<!-- OVERLAY + SIDE MENU -->
+<div id="menuOverlay"
+     class="fixed inset-0 bg-black/30 z-40 hidden"></div>
+
+<aside id="sideMenu"
+       class="fixed top-0 right-0 h-full w-72 max-w-[80%] bg-white z-50 transform translate-x-full transition-transform duration-200 shadow-2xl flex flex-col">
+  <!-- Top bar in drawer -->
+  <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+    <div class="font-semibold text-gray-800 text-sm">
+      Menu
+    </div>
+    <button id="closeMenuBtn"
+            class="p-1.5 rounded-xl border border-gray-200">
+      <i data-feather="x" class="w-4 h-4 text-gray-700"></i>
+    </button>
+  </div>
+
+  <!-- Links -->
+  <nav class="flex-1 py-2 text-sm">
+    <a href="index.html"
+       class="flex items-center gap-3 px-5 py-3 text-indigo-700 font-semibold hover:bg-indigo-50">
+      <span>✉</span>
+      <span>OTP Panel</span>
+    </a>
+
+    <a href="virtualnumbers"
+       class="flex items-center gap-3 px-5 py-3 text-gray-800 hover:bg-gray-50">
+      <span>📱</span>
+      <span>Free Numbers</span>
+    </a>
+
+    <a href="https://t.me/+8uILVxT_n6lhYzFk" target="_blank"
+       class="flex items-center gap-3 px-5 py-3 text-gray-800 hover:bg-gray-50">
+      <span>📣</span>
+      <span>Telegram Main Channel</span>
+    </a>
+
+    <a href="https://t.me/+c4VCxBCT3-QzZGFk" target="_blank"
+       class="flex items-center gap-3 px-5 py-3 text-gray-800 hover:bg-gray-50">
+      <span>📲</span>
+      <span>Numbers Channel</span>
+    </a>
+  </nav>
+</aside>
+
+<!-- MAIN CONTENT -->
+<div class="px-4 pt-28 pb-10">
+  <main class="max-w-5xl mx-auto content-shell px-4 sm:px-6 py-6 space-y-6">
+
+    <!-- MAIN CARD: INCOMING OTP -->
+    <section class="card p-5 md:p-7 space-y-4 border border-gray-100">
+      <div>
+        <p class="uppercase tracking-wide text-xs font-semibold text-indigo-500 mb-1">
+          Live Feed
+        </p>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900">
+          Incoming OTP Messages
+        </h1>
+        <p id="otpSubtitle" class="text-sm text-gray-500 mt-1">
+          Loading OTP .....
+        </p>
+      </div>
+
+      <p class="text-sm text-gray-600">
+        Latest <span class="font-semibold">WhatsApp / Telegram / Facebook</span> logs.
       </p>
-    </div>
 
-    <div class="flex flex-wrap gap-2 justify-center">
-      <!-- Get Free Numbers = opens new page -->
-      <a href="numbers.html"
-         class="px-4 py-2 bg-yellow-400 text-black rounded-lg font-semibold text-sm shadow hover:opacity-90">
-         ☎️ Get  Numbers
-      </a>
+      <!-- REFRESH + COUNTER -->
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mt-2">
+        <button id="refreshSmsBtn"
+                class="pill w-full md:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold flex items-center justify-center gap-2 shadow">
+          <i id="refreshSmsIcon" data-feather="refresh-cw" class="w-4 h-4"></i>
+          <span>Refresh SMS</span>
+        </button>
 
-      <a href="https://t.me/+8uILVxT_n6lhYzFk" target="_blank"
-         class="px-4 py-2 bg-blue-600 rounded-lg font-semibold text-sm">
-         📢 Main Channel
-      </a>
+        <p id="smsStatus" class="text-xs md:text-sm text-gray-500 text-center md:text-right">
+          Loading SMS messages…
+        </p>
+      </div>
 
-      <a href="https://t.me/+c4VCxBCT3-QzZGFk" target="_blank"
-         class="px-4 py-2 bg-green-600 rounded-lg font-semibold text-sm">
-         📞 Numbers Channel
-      </a>
-    </div>
-  </header>
+      <!-- SEARCH -->
+      <div class="mt-3">
+        <label class="block text-xs font-semibold text-gray-500 mb-1">
+          Search OTP / Number / Service / Country / Message
+        </label>
+        <div class="relative">
+          <span class="absolute left-3 top-2.5 text-gray-400">
+            <i data-feather="search" class="w-4 h-4"></i>
+          </span>
+          <input id="searchInput"
+                 class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50"
+                 type="text"
+                 placeholder="WhatsApp, Pakistan, Telegram…" />
+        </div>
+      </div>
 
-  <!-- OTP / SMS SECTION -->
-  <section>
-    <div class="flex justify-between items-center mb-2">
-      <h2 class="text-2xl font-bold flex items-center gap-2">
-        <i data-feather="message-square" class="w-6 h-6 text-yellow-400"></i>
-        Incoming OTP Messages
-      </h2>
-      <button id="refreshSmsBtn"
-              class="px-3 py-1.5 text-xs bg-yellow-400 text-black font-semibold rounded-lg flex items-center gap-1">
-        <i id="refreshSmsIcon" data-feather="refresh-cw" class="w-4 h-4"></i>
-        Refresh SMS
-      </button>
-    </div>
+      <!-- OTP LIST -->
+      <div class="mt-4 scroll-area divide-y divide-gray-100" id="otpContainer">
+        <!-- Rows injected by JS -->
+      </div>
 
-    <!-- 🔍 SMS SEARCH BOX -->
-    <div class="mt-1 mb-3">
-      <input id="smsSearchBox"
-             type="text"
-             placeholder="Search OTP / Number / Service / Country / Message…"
-             class="w-full bg-[#18181b] border border-gray-700 text-gray-200 text-sm rounded-lg p-2">
-    </div>
+      <p id="smsError" class="text-center text-sm text-red-500 hidden mt-3"></p>
+    </section>
 
-    <div id="smsStatus" class="text-yellow-400 py-2 text-center text-sm">Loading SMS…</div>
-
-    <div class="bg-[#18181b] rounded-xl shadow-xl sms-scroll">
-      <table class="min-w-full text-xs sm:text-sm">
-        <thead class="bg-[#242427] sticky top-0 z-10">
-          <tr>
-            <th class="px-3 py-3 text-left w-4/5">Details</th>
-            <th class="px-3 py-3 text-center w-1/5">Analyze</th>
-          </tr>
-        </thead>
-        <tbody id="otpTableBody"></tbody>
-      </table>
-    </div>
-    <p id="smsError" class="text-red-400 text-center text-sm pt-2 hidden"></p>
-  </section>
-
+    <!-- FOOTER SMALL -->
+    <footer class="text-center text-xs text-gray-400 pb-2">
+      Powered by <span class="font-semibold text-indigo-500">Junaid Niz</span> • Free OTP Hub
+    </footer>
+  </main>
 </div>
 
 <script>
   feather.replace();
 
-  // ---------- PHONE / FLAG HELPERS ----------
-  const phoneUtil = window.libphonenumber
-    ? window.libphonenumber.PhoneNumberUtil.getInstance()
-    : null;
-
-  const regionNames = (typeof Intl !== "undefined" && Intl.DisplayNames)
-    ? new Intl.DisplayNames(["en"], { type: "region" })
-    : null;
-
-  function flagFromRegion(regionCode) {
-    if (!regionCode) return "🌍";
-    const base = 127462; // 'A'
-    return regionCode
-      .toUpperCase()
-      .split("")
-      .map(c => String.fromCodePoint(base + c.charCodeAt(0) - "A".charCodeAt(0)))
-      .join("");
-  }
-
+  // --------- SIMPLE COUNTRY DETECTION (sirf group text se) ---------
   const FLAG_FALLBACK = {
-    "COMOROS": "🇰🇲", "Comoros": "🇰🇲",
-    "Pakistan": "🇵🇰", "PAKISTAN": "🇵🇰",
-    "Nigeria": "🇳🇬", "NIGERIA": "🇳🇬",
-    "Nepal": "🇳🇵", "NEPAL": "🇳🇵",
-    "Morocco": "🇲🇦", "MOROCCO": "🇲🇦",
-    "Burkina Faso": "🇧🇫", "BURKINA FASO": "🇧🇫",
-    "India": "🇮🇳", "Bangladesh": "🇧🇩", "Afghanistan": "🇦🇫",
-    "Ethiopia": "🇪🇹", "Kyrgyzstan": "🇰🇬",
-    "Kazakhstan": "🇰🇿", "Tajikistan": "🇹🇯",
-    "Ukraine": "🇺🇦", "Congo": "🇨🇬",
-    "Venezuela": "🇻🇪"
+    "Pakistan":"🇵🇰","PAKISTAN":"🇵🇰",
+    "Nigeria":"🇳🇬","NIGERIA":"🇳🇬",
+    "Comoros":"🇰🇲","COMOROS":"🇰🇲",
+    "Morocco":"🇲🇦","MOROCCO":"🇲🇦",
+    "Burkina Faso":"🇧🇫","BURKINA FASO":"🇧🇫",
+    "Afghanistan":"🇦🇫","Bangladesh":"🇧🇩","India":"🇮🇳",
+    "Nepal":"🇳🇵","Ethiopia":"🇪🇹","Kyrgyzstan":"🇰🇬",
+    "Kazakhstan":"🇰🇿","Tajikistan":"🇹🇯","Ukraine":"🇺🇦",
+    "Congo":"🇨🇬","Venezuela":"🇻🇪",
+    "Cambodia":"🇰🇭","CAMBODIA":"🇰🇭"
   };
 
-  function cleanCountryFromGroup(raw) {
-    if (!raw) return "Unknown";
+  function cleanCountryFromGroup(raw){
+    if(!raw) return "Unknown";
     let c = String(raw).trim();
     c = c.split("-")[0].trim();
-    const digitIndex = c.search(/[0-9]/);
-    if (digitIndex !== -1) c = c.slice(0, digitIndex).trim();
-    c = c.replace(/\s+/g, " ");
+    const d = c.search(/[0-9]/);
+    if(d !== -1) c = c.slice(0,d).trim();
+    c = c.replace(/\s+/g," ");
     return c || "Unknown";
   }
 
-  function getCountryInfo(numberStr, groupText) {
-    try {
-      if (phoneUtil && numberStr) {
-        let n = String(numberStr).trim();
-        if (!n.startsWith("+")) n = "+" + n;
-        const parsed = phoneUtil.parseAndKeepRawInput(n, "");
-        const region = phoneUtil.getRegionCodeForNumber(parsed);
-        if (region) {
-          const countryName = regionNames ? regionNames.of(region) : region;
-          const flag = flagFromRegion(region);
-          return { country: countryName || "Unknown", flag };
-        }
-      }
-    } catch (e) {
-      console.warn("phoneUtil error", e);
-    }
-    const cg = cleanCountryFromGroup(groupText);
+  function getCountryInfo(numberStr, groupText){
+    const cg = cleanCountryFromGroup(groupText || "");
     const flag = FLAG_FALLBACK[cg] || FLAG_FALLBACK[cg.toUpperCase()] || "🌍";
     return { country: cg, flag };
   }
 
-  function maskNumber(n) {
-    if (!n) return "N/A";
+  function maskNumber(n){
+    if(!n) return "N/A";
     const s = String(n);
-    if (s.length <= 7) return s;
-    return s.slice(0, 4) + "****" + s.slice(-3);
+    if(s.length <= 7) return s;
+    return s.slice(0,4) + "****" + s.slice(-3);
   }
 
-  // ---------------- API LISTS (OTP ONLY) ----------------
+  function extractOtp(msg){
+    if(!msg) return null;
+    const match = String(msg).match(/\b\d{3,8}\b/);
+    return match ? match[0] : null;
+  }
+
+  // -------- API LIST ----------
   const CORS = "https://corsproxy.io/?";
+
   const SMS_APIS = [
-    "https://www.kamibroken.pw/api/sms1?type=sms&iDisplayLength=10000",
+    "https://www.junaidniz.pw/api/tempotp?type=sms&iDisplayLength=10000",
     "https://www.kamibroken.pw/api/sms?type=sms&iDisplayLength=10000",
-    "https://www.junaidniz.pw/api/tempotps?type=sms",
-    "https://www.junaidniz.pw/api/tempotp?type=sms",
+    "https://www.junaidniz.pw/api/tempotps?type=sms"
   ].map(u => CORS + encodeURIComponent(u));
 
-  // ---------------- DOM ELEMENTS ----------------
-  const smsStatus    = document.getElementById("smsStatus");
-  const smsError     = document.getElementById("smsError");
-  const otpTableBody = document.getElementById("otpTableBody");
+  const otpContainer   = document.getElementById("otpContainer");
+  const smsStatus      = document.getElementById("smsStatus");
+  const smsError       = document.getElementById("smsError");
   const refreshSmsBtn  = document.getElementById("refreshSmsBtn");
   const refreshSmsIcon = document.getElementById("refreshSmsIcon");
-  const smsSearchBox   = document.getElementById("smsSearchBox");
+  const searchInput    = document.getElementById("searchInput");
+  const otpSubtitle    = document.getElementById("otpSubtitle");
 
-  let allSmsData = [];
+  const mobileMenuBtn  = document.getElementById("mobileMenuBtn");
+  const sideMenu       = document.getElementById("sideMenu");
+  const menuOverlay    = document.getElementById("menuOverlay");
+  const closeMenuBtn   = document.getElementById("closeMenuBtn");
 
-  // ---------------- FETCH SMS (old perfect style) ----------------
-  async function fetchSMS() {
-    smsStatus.textContent = "Loading SMS…";
+  let allSmsRecords = [];
+
+  async function fetchSMS(){
     smsError.classList.add("hidden");
-    otpTableBody.innerHTML = "";
+    smsStatus.textContent = "Loading SMS messages…";
+    if (otpSubtitle) otpSubtitle.textContent = "Loading OTP .....";
+    otpContainer.innerHTML = "";
     refreshSmsBtn.disabled = true;
     refreshSmsIcon.classList.add("animate-spin");
 
-    try {
-      const results = [];
+    try{
+      const rows = [];
 
-      for (const url of SMS_APIS) {
-        try {
+      for(const url of SMS_APIS){
+        try{
           const res = await fetch(url);
-          if (!res.ok) {
-            console.warn("SMS API HTTP", res.status, url);
-            continue;
-          }
-          const text = await res.text();
-          let json;
-          try {
-            json = JSON.parse(text);
-          } catch (e) {
-            console.warn("Not JSON from", url, text.slice(0, 200));
-            continue;
-          }
+          if(!res.ok) continue;
+          const json = await res.json();
+          let data = [];
+          if(json && Array.isArray(json.aaData)) data = json.aaData;
+          else if(json && Array.isArray(json.data)) data = json.data;
+          else if(Array.isArray(json)) data = json;
 
-          let rows = [];
-          if (json && Array.isArray(json.aaData)) rows = json.aaData;
-          else if (json && Array.isArray(json.data)) rows = json.data;
-          else if (Array.isArray(json)) rows = json;
-
-          if (rows.length) results.push(...rows);
-        } catch (err) {
-          console.warn("SMS API error", url, err);
+          rows.push(...data);
+        }catch(e){
+          console.warn("SMS API error",url,e);
         }
       }
 
-      if (!results.length) {
+      if(!rows.length){
         smsStatus.textContent = "No SMS from any API.";
+        if (otpSubtitle) otpSubtitle.textContent = "No OTP found.";
         return;
       }
 
       const seen = new Set();
       const unique = [];
-      for (const row of results) {
-        if (!Array.isArray(row) || row.length < 5) continue;
-        const key = String(row[0]) + "|" + String(row[2]) + "|" + String(row[4]);
-        if (!seen.has(key)) {
-          seen.add(key);
-          unique.push(row);
-        }
+      for(const r of rows){
+        if(!Array.isArray(r) || r.length < 5) continue;
+        const key = String(r[0])+"|"+String(r[2])+"|"+String(r[4]);
+        if(seen.has(key)) continue;
+        seen.add(key);
+        unique.push(r);
       }
 
-      allSmsData = unique;
-      renderSmsTable();
+      allSmsRecords = unique;
+      renderSmsList(allSmsRecords);
+      smsStatus.textContent = `Loaded ${allSmsRecords.length} SMS messages.`;
+      if (otpSubtitle) otpSubtitle.textContent = "Working OTP .";
 
-    } catch (e) {
-      console.error("fetchSMS error", e);
+    }catch(e){
       smsStatus.textContent = "";
       smsError.textContent = e.message || "Failed to load SMS.";
       smsError.classList.remove("hidden");
-    } finally {
+      if (otpSubtitle) otpSubtitle.textContent = "Error loading OTP.";
+    }finally{
       refreshSmsBtn.disabled = false;
       refreshSmsIcon.classList.remove("animate-spin");
     }
   }
 
-  function renderSmsTable(customList = null) {
-    const data = customList || allSmsData;
+  function serviceIcon(service){
+    const s = String(service || "").toLowerCase();
+    if(s.includes("whatsapp")) return "🟢 WhatsApp";
+    if(s.includes("telegram")) return "📨 Telegram";
+    if(s.includes("facebook")) return "📘 Facebook";
+    // *** ERROR FIXED YAHAN: closing bracket add ki ***
+    return "📱 " + (service || "Service");
+  }
 
-    if (!data.length) {
-      smsStatus.textContent = "No recent OTP messages found.";
-      otpTableBody.innerHTML = "";
+  function renderSmsList(records){
+    if(!records.length){
+      otpContainer.innerHTML =
+        "<p class='py-6 text-center text-sm text-gray-400'>No OTP messages found.</p>";
       return;
     }
 
     let html = "";
-    data.forEach(row => {
-      if (!Array.isArray(row) || row.length < 5) return;
+    records.forEach(row => {
       const time    = row[0];
       const group   = row[1];
       const number  = row[2];
       const service = row[3];
-      const msg     = row[4] || "";
+      const message = row[4] || "";
 
-      const { country, flag } = getCountryInfo(number, group);
-      const masked  = maskNumber(number);
-      const otpMatch = String(msg).match(/\b\d{4,8}\b/);
-      const otp     = otpMatch ? otpMatch[0] : "N/A";
+      const {country, flag} = getCountryInfo(number, group);
+      const masked = maskNumber(number);
+      const otp    = extractOtp(message) || "N/A";
+
+      const svcLabel = serviceIcon(service);
+      const msgHtml  = String(message).replace(/\n/g,"<br>");
 
       html += `
-        <tr class="border-b border-gray-800 align-top">
-          <td class="px-3 py-3">
-            <b>${flag} New ${country} ${service} OTP!</b>
-            <div class="mt-1 text-gray-300 space-y-0.5">
-              <blockquote>🕰 Time: ${time}</blockquote>
-              <blockquote>${flag} Country: ${country}</blockquote>
-              <blockquote>📞 Number: ${masked}</blockquote>
-              <blockquote>🔑 OTP: <code>${otp}</code></blockquote>
+        <article class="py-4 px-3 md:px-4 flex gap-3 text-sm sms-row">
+          <div class="mt-1">
+            <span class="text-xl">${flag}</span>
+          </div>
+          <div class="flex-1 space-y-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="font-semibold text-gray-900">
+                ${flag} New ${country} ${service || "OTP"}!
+              </span>
+              <span class="otp-badge">OTP: ${otp}</span>
             </div>
-            <p class="mt-2 text-gray-400 text-xs sm:text-sm">
-              ${String(msg).replace(/\n/g, "<br>")}
+
+            <div class="text-xs text-gray-500 space-y-0.5">
+              <p>🕒 Time: <span class="font-medium text-gray-700">${time}</span></p>
+              <p>🌎 Country: <span class="font-medium text-gray-700">${country}</span></p>
+              <p>📱 Number: <span class="font-mono text-gray-800">${masked}</span></p>
+              <p>📡 Service: <span class="font-medium text-indigo-700">${svcLabel}</span></p>
+            </div>
+
+            <p class="mt-1.5 text-gray-700 text-xs sm:text-sm leading-snug">
+              ${msgHtml}
             </p>
-          </td>
-          <td class="px-3 py-3 text-center align-top">
-            <button class="px-2 py-1 bg-gray-800 rounded text-xs">AI</button>
-          </td>
-        </tr>
+          </div>
+
+          <div class="ml-2">
+            <button class="pill px-2 py-1 bg-gray-100 text-gray-600 text-xs flex items-center gap-1">
+              <i data-feather="cpu" class="w-3 h-3"></i>
+              AI
+            </button>
+          </div>
+        </article>
       `;
     });
 
-    otpTableBody.innerHTML = html;
-    smsStatus.textContent = `Loaded ${data.length} SMS messages.`;
+    otpContainer.innerHTML = html;
+    feather.replace();
   }
 
-  function applySmsSearchFilter() {
-    const q = smsSearchBox.value.toLowerCase().trim();
-    if (!q) {
-      renderSmsTable();
+  function applySearch(){
+    const q = searchInput.value.trim().toLowerCase();
+    if(!q){
+      renderSmsList(allSmsRecords);
+      smsStatus.textContent = `Loaded ${allSmsRecords.length} SMS messages.`;
       return;
     }
 
-    const filtered = allSmsData.filter(row => {
-      if (!Array.isArray(row)) return false;
-      const time    = String(row[0]).toLowerCase();
-      const group   = String(row[1]).toLowerCase();
-      const number  = String(row[2]).toLowerCase();
-      const service = String(row[3]).toLowerCase();
-      const message = String(row[4]).toLowerCase();
-      return (
-        time.includes(q) ||
-        group.includes(q) ||
-        number.includes(q) ||
-        service.includes(q) ||
-        message.includes(q)
-      );
+    const filtered = allSmsRecords.filter(row => {
+      const full = row.join(" ").toLowerCase();
+      return full.includes(q);
     });
 
-    renderSmsTable(filtered);
+    renderSmsList(filtered);
+    smsStatus.textContent = `Showing ${filtered.length} of ${allSmsRecords.length} SMS messages.`;
   }
 
-  // ---------------- INIT ----------------
+  function openMenu(){
+    sideMenu.classList.remove("translate-x-full");
+    menuOverlay.classList.remove("hidden");
+  }
+
+  function closeMenu(){
+    sideMenu.classList.add("translate-x-full");
+    menuOverlay.classList.add("hidden");
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     fetchSMS();
     refreshSmsBtn.addEventListener("click", fetchSMS);
-    smsSearchBox.addEventListener("input", applySmsSearchFilter);
+    searchInput.addEventListener("input", applySearch);
+
+    // MENU EVENTS
+    mobileMenuBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openMenu();
+    });
+
+    closeMenuBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      closeMenu();
+    });
+
+    menuOverlay.addEventListener("click", closeMenu);
+
+    document.addEventListener("keydown", (e) => {
+      if(e.key === "Escape") closeMenu();
+    });
   });
 </script>
 
 </body>
-</html>
+  </html>
