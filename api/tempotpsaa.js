@@ -1,111 +1,251 @@
-const axios = require('axios');
+import express from "express";
+import fs from "fs";
+import path from "path";
+import cheerio from "cheerio";
+import querystring from "querystring";
+import { fileURLToPath } from "url";
 
-const CREDENTIALS = {
-    username: "Kami520",
-    password: "Kami526"
-};
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const BASE_URL = "http://51.89.99.105/NumberPanel";
-const HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36",
-    "X-Requested-With": "XMLHttpRequest",
-    "Referer": `${BASE_URL}/client/MySMSNumbers`
-};
+const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-let cachedCookie = null;
+// =========================
+//  PANEL CONFIG ( EDIT IF NEEDED )
+// =========================
+const PANEL_HOST = process.env.PANEL_HOST || "http://51.89.99.105";
+const LOGIN_PATH = process.env.LOGIN_PATH || "/NumberPanel/login";
 
-async function performLogin() {
+const PANEL_USER = process.env.PANEL_USER || "Junaidniz786";
+const PANEL_PASS = process.env.PANEL_PASS || "Junaidniz786";
+
+const COOKIE_FILE = path.join(__dirname, "session.cookie");
+const PORT = parseInt(process.env.PORT || "3001");
+const TIMEOUT = parseInt(process.env.TIMEOUT_MS || "15000");
+
+let savedCookie = loadCookie();
+
+// =========================
+//   COOKIE LOAD / SAVE
+// =========================
+function loadCookie() {
     try {
-        const session = axios.create({
-            withCredentials: true,
-            headers: { ...HEADERS, "Upgrade-Insecure-Requests": "1" }
-        });
-
-        const loginPage = await session.get(`${BASE_URL}/login`);
-        
-        let initialCookie = "";
-        if (loginPage.headers['set-cookie']) {
-            const tempCookies = loginPage.headers['set-cookie'];
-            const phpSession = tempCookies.find(c => c.startsWith('PHPSESSID'));
-            if (phpSession) {
-                initialCookie = phpSession.split(';')[0];
-            }
+        if (fs.existsSync(COOKIE_FILE)) {
+            return fs.readFileSync(COOKIE_FILE, "utf8").trim();
         }
+    } catch {}
+    return null;
+}
 
-        const match = loginPage.data.match(/What is (\d+) \+ (\d+) = \?/);
-        if (!match) throw new Error("Captcha not found");
+function saveCookie(c) {
+    try { fs.writeFileSync(COOKIE_FILE, c, "utf8"); } catch(e){ console.error("save cookie err", e) }
+}
 
-        const num1 = parseInt(match[1]);
-        const num2 = parseInt(match[2]);
-        const answer = num1 + num2;
+function maskCookie(c) {
+    if (!c) return null;
+    return c.split(";").map(p => {
+        const [k,v] = p.split("=");
+        if (!v) return p;
+        return `${k}=****${v.slice(-4)}`;
+    }).join("; ");
+}
 
-        const params = new URLSearchParams();
-        params.append('username', CREDENTIALS.username);
-        params.append('password', CREDENTIALS.password);
-        params.append('capt', answer);
+// =========================
+//    SAFE FETCH (Timeout)
+// =========================
+function timeoutSignal(ms) {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), ms);
+    return { controller, clear: () => clearTimeout(id) };
+}
 
-        const loginResp = await session.post(`${BASE_URL}/signin`, params, {
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-                "Origin": "http://51.89.99.105",
-                "Referer": `${BASE_URL}/login`,
-                "Cookie": initialCookie
-            },
-            maxRedirects: 0,
-            validateStatus: (status) => status >= 200 && status < 400
-        });
-
-        const newCookies = loginResp.headers['set-cookie'];
-        if (newCookies) {
-            const newPhpSession = newCookies.find(c => c.startsWith('PHPSESSID'));
-            if (newPhpSession) {
-                cachedCookie = newPhpSession.split(';')[0];
-                return cachedCookie;
-            }
-        }
-
-        if (initialCookie) {
-            cachedCookie = initialCookie;
-            return cachedCookie;
-        }
-
-        throw new Error("No cookie returned");
-    } catch (e) {
-        return null;
+async function safeFetch(url, options = {}) {
+    const { controller, clear } = timeoutSignal(TIMEOUT);
+    try {
+        const res = await fetch(url, { ...options, signal: controller.signal });
+        clear();
+        return res;
+    } catch (err) {
+        clear();
+        throw err;
     }
 }
 
-module.exports = async (req, res) => {
-    const { type } = req.query; 
-
-    let targetUrl = "";
-    if (type === 'numbers') {
-        targetUrl = `${BASE_URL}/client/res/data_smsnumbers.php?frange=&fclient=&sEcho=2&iColumns=6&sColumns=%2C%2C%2C%2C%2C&iDisplayStart=0&iDisplayLength=-1&mDataProp_0=0&sSearch_0=&bRegex_0=false&bSearchable_0=true&bSortable_0=true&mDataProp_1=1&sSearch_1=&bRegex_1=false&bSearchable_1=true&bSortable_1=true&mDataProp_2=2&sSearch_2=&bRegex_2=false&bSearchable_2=true&bSortable_2=true&mDataProp_3=3&sSearch_3=&bRegex_3=false&bSearchable_3=true&bSortable_3=true&mDataProp_4=4&sSearch_4=&bRegex_4=false&bSearchable_4=true&bSortable_4=true&mDataProp_5=5&sSearch_5=&bRegex_5=false&bSearchable_5=true&bSortable_5=true&sSearch=&bRegex=false&iSortCol_0=0&sSortDir_0=asc&iSortingCols=1&_=1765425845351`;
-    } else if (type === 'sms') {
-        targetUrl = `${BASE_URL}/client/res/data_smscdr.php?fdate1=2025-12-11%2000:00:00&fdate2=2125-12-11%2023:59:59&frange=&fnum=&fcli=&fgdate=&fgmonth=&fgrange=&fgnumber=&fgcli=&fg=0&sesskey=Q05RRkJQUEJBUg==&sEcho=2&iColumns=7&sColumns=%2C%2C%2C%2C%2C%2C&iDisplayStart=0&iDisplayLength=-1&mDataProp_0=0&sSearch_0=&bRegex_0=false&bSearchable_0=true&bSortable_0=true&mDataProp_1=1&sSearch_1=&bRegex_1=false&bSearchable_1=true&bSortable_1=true&mDataProp_2=2&sSearch_2=&bRegex_2=false&bSearchable_2=true&bSortable_2=true&mDataProp_3=3&sSearch_3=&bRegex_3=false&bSearchable_3=true&bSortable_3=true&mDataProp_4=4&sSearch_4=&bRegex_4=false&bSearchable_4=true&bSortable_4=true&mDataProp_5=5&sSearch_5=&bRegex_5=false&bSearchable_5=true&bSortable_5=true&mDataProp_6=6&sSearch_6=&bRegex_6=false&bSearchable_6=true&bSortable_6=true&sSearch=&bRegex=false&iSortCol_0=0&sSortDir_0=desc&iSortingCols=1&_=1765425809322`;
-    } else {
-        return res.status(400).json({ error: "Invalid type" });
-    }
+// =========================
+//      LOGIN ENDPOINT
+// =========================
+app.post("/login", async (req, res) => {
+    const user = req.body.user || PANEL_USER;
+    const pass = req.body.pass || PANEL_PASS;
 
     try {
-        if (!cachedCookie) {
-            await performLogin();
-        }
+        // STEP 1: GET login page
+        const loginURL = PANEL_HOST + LOGIN_PATH;
 
-        let response = await axios.get(targetUrl, {
-            headers: { ...HEADERS, "Cookie": cachedCookie }
+        const page = await safeFetch(loginURL);
+        const html = await page.text();
+
+        const $ = cheerio.load(html);
+        const form = $("form").first();
+
+        // Extract form fields
+        const inputs = {};
+        form.find("input").each((i, el) => {
+            const name = $(el).attr("name");
+            const val  = $(el).attr("value") || "";
+            if (name) inputs[name] = val;
         });
 
-        if (typeof response.data === 'string' && (response.data.includes('login') || response.data.includes('Direct Script'))) {
-            await performLogin();
-            response = await axios.get(targetUrl, {
-                headers: { ...HEADERS, "Cookie": cachedCookie }
+        // Guess username + password fields
+        let userField = Object.keys(inputs).find(n => /user|login|email/i.test(n));
+        let passField = Object.keys(inputs).find(n => /pass|pwd/i.test(n));
+
+        if (!userField || !passField) {
+            return res.json({
+                ok: false,
+                msg: "Cannot detect username/password fields.",
+                foundFields: Object.keys(inputs)
             });
         }
 
-        return res.status(200).json(response.data);
+        // Build POST body
+        inputs[userField] = user;
+        inputs[passField] = pass;
 
-    } catch (error) {
-        return res.status(500).json({ error: error.message });
+        const body = querystring.stringify(inputs);
+
+        // STEP 2: POST login
+        const loginPost = await safeFetch(loginURL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "User-Agent": "LoginProxy/1.0"
+            },
+            body,
+            redirect: "manual"
+        });
+
+        let rawCookies = [];
+
+        if (loginPost.headers.raw) {
+            rawCookies = loginPost.headers.raw()["set-cookie"] || [];
+        } else {
+            const c = loginPost.headers.get("set-cookie");
+            if (c) rawCookies = [c];
+        }
+
+        if (rawCookies.length === 0) {
+            // try to follow redirect once
+            const status = loginPost.status;
+            const location = loginPost.headers.get("location") || loginPost.headers.get("Location");
+            if (status >= 300 && status < 400 && location) {
+                const followUrl = new URL(location, PANEL_HOST).toString();
+                const followResp = await safeFetch(followUrl, { method: "GET", headers: { "User-Agent":"Login-Proxy/1.0", "Referer": loginURL }, redirect: "manual" });
+                if (followResp.headers.raw) {
+                    rawCookies = followResp.headers.raw()["set-cookie"] || [];
+                } else {
+                    const c2 = followResp.headers.get("set-cookie");
+                    if (c2) rawCookies = [c2];
+                }
+            }
+        }
+
+        if (!rawCookies || rawCookies.length === 0) {
+            return res.status(401).json({ ok:false, msg:"Login failed (no cookie)", sample: (await loginPost.text()).slice(0,800) });
+        }
+
+        const finalCookie = rawCookies.map(s => s.split(";")[0]).join("; ");
+
+        savedCookie = finalCookie;
+        saveCookie(finalCookie);
+
+        return res.json({
+            ok: true,
+            msg: "Login successful",
+            cookie: maskCookie(finalCookie)
+        });
+
+    } catch (err) {
+        return res.status(500).json({ ok: false, error: err.toString() });
     }
-};
+});
+
+// =========================
+//  CHECK SAVED COOKIE
+// =========================
+app.get("/session", (req, res) => {
+    res.json({ cookie: maskCookie(savedCookie) });
+});
+
+// =========================
+//  FETCH NUMBERS
+// =========================
+app.get("/fetch-numbers", async (req, res) => {
+    if (!savedCookie)
+        return res.json({ ok: false, msg: "Login required" });
+
+    const url =
+        PANEL_HOST +
+        "/NumberPanel/ints/agent/res/data_smsnumbers.php?frange=&fclient=&sEcho=2&iColumns=8&sColumns=%2C%2C%2C%2C%2C%2C%2C&iDisplayStart=0&iDisplayLength=-1";
+
+    try {
+        const r = await safeFetch(url, {
+            headers: {
+                Cookie: savedCookie,
+                "User-Agent": "LoginProxy/1.0",
+                Accept: "application/json"
+            }
+        });
+
+        const text = await r.text();
+        // return raw text (might already be json)
+        res.type("json").send(text);
+
+    } catch (err) {
+        res.json({ ok: false, error: err.toString() });
+    }
+});
+
+// =========================
+//  FETCH SMS
+// =========================
+app.get("/fetch-sms", async (req, res) => {
+    if (!savedCookie)
+        return res.json({ ok: false, msg: "Login required" });
+
+    const today = new Date().toISOString().split("T")[0];
+
+    const url =
+        PANEL_HOST +
+        "/NumberPanel/ints/agent/res/data_smscdr.php?fdate1=" +
+        today +
+        "%2000:00:00&fdate2=" +
+        today +
+        "%2023:59:59&frange=&fclient=&fnum=&fcli=&fgdate=&fgmonth=&fgrange=&fgnumber=&fgcli=&fg=0&sEcho=2&iColumns=9&iDisplayStart=0&iDisplayLength=-1";
+
+    try {
+        const r = await safeFetch(url, {
+            headers: {
+                Cookie: savedCookie,
+                "User-Agent": "LoginProxy/1.0",
+                Accept: "application/json"
+            }
+        });
+
+        const text = await r.text();
+        res.type("json").send(text);
+
+    } catch (err) {
+        res.json({ ok: false, error: err.toString() });
+    }
+});
+
+// =========================
+//  START SERVER
+// =========================
+app.listen(PORT, () => {
+    console.log(`Proxy running on port ${PORT}`);
+    if (savedCookie) console.log("Loaded session:", maskCookie(savedCookie));
+});
