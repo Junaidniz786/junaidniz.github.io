@@ -1,8 +1,7 @@
 {
-  "name": "junaidniz.pw-api",
+  "name": "number-panel-api",
   "version": "1.0.0",
-  "private": true,
-  "scripts": {
-    "start": "node index.js"
+  "dependencies": {
+    "axios": "0.27.2"
   }
 }
